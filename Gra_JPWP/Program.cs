@@ -21,30 +21,29 @@ namespace Gra_JPWP
     {
         static void Main(string[] args)
         {
-            MyWindow window = new MyWindow();
-            window.Show();
+            GameWindow Game = new GameWindow();
+            Game.Show();
         }
     }
 
-    class Airport 
+    class AirportClass 
     {
         public Texture texture;
         public Sprite sprite;
         public RectangleShape rectangle;
-        public Airport()
+        public AirportClass()
         {
-            texture = new Texture("Lotnisko_kradziony2.png");
+            texture = new Texture("Lotnisko.png");
             sprite = new Sprite(texture);
             sprite.Origin = new Vector2f(40, 40);
             sprite.Position = new Vector2f(400, 300);
-            rectangle = new RectangleShape(new Vector2f(250, 70)){
-                Position = new Vector2f(sprite.Position.X + 150, sprite.Position.Y-25)
+            rectangle = new RectangleShape(new Vector2f(320, 60)){
+                Position = new Vector2f(sprite.Position.X + 100, sprite.Position.Y-20)
             };
-
         }
     }
 
-    class obiekt
+    class AirplaneClass
     {
         public Texture texture;
         public Sprite sprite;
@@ -60,20 +59,22 @@ namespace Gra_JPWP
         Vector2f curPlanePos;
         Vector2i positionOld = new Vector2i(0, 0);
         Vector2i position = new Vector2i(0, 0);
-        public obiekt(int num) {
+        public AirplaneClass(int num) {
             this.number = num;
-            x *= 1/(number+1);
-            texture = new Texture("samlot_kradziony2.png");
+            x = 1;
+            texture = new Texture("samlot.png");
             sprite = new Sprite(texture);
             sprite.Origin = new Vector2f(40, 40);
-            sprite.Position = new Vector2f(900, 600);
-        }
-        public void Instantiate()
-        {
-            
+            sprite.Position = new Vector2f(100*number, 600);
         }
         public void Move(double x, double y) { 
             sprite.Position += new Vector2f((float)x, (float)y);
+        }
+        public void ReverseFlight()
+        {
+            x = -x;
+            y = -y;
+            sprite.Rotation = (float)rotation;
         }
         public void MoveMath(RenderWindow window) {
             if ((int)lines.VertexCount > (int)VertexCounter + 1)
@@ -91,18 +92,18 @@ namespace Gra_JPWP
 
                 x = 2 * Math.Cos((360 - rotation) * Math.PI / 180);
                 y = -2 * Math.Sin((360 - rotation) * Math.PI / 180);
-                //Console.WriteLine(x + " " + y);
+
                 Move(x, y);
                 sprite.Rotation = (float)rotation + 180;
             } else Move(x, y);
 
 
         }
+
         public void GetLines(bool wasMousePressed, RenderWindow window)
         {
             positionOld = position;
             position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
-            //if (Mouse.IsButtonPressed(Mouse.Button.Left) && sprite.GetGlobalBounds().Contains(position.X, position.Y))
             if (wasMousePressed == false && Mouse.IsButtonPressed(Mouse.Button.Left))
             {
                 lines.Clear();
@@ -114,27 +115,25 @@ namespace Gra_JPWP
                 {
                     Mouse_x.Add(position.X);
                     Mouse_y.Add(position.Y);
-                    Console.WriteLine(position.X + " " + position.Y);
-                    Console.WriteLine(number);
-                    lines.Append(new Vertex(new Vector2f(Mouse_x[Mouse_x.Count() - 1], Mouse_y[Mouse_x.Count() - 1]), new Color(0, 255, 0)));
+
+                    lines.Append(new Vertex(new Vector2f(Mouse_x[Mouse_x.Count() - 1], Mouse_y[Mouse_x.Count() - 1]), new Color(255, 0, 0)));
                 }
                 else if (Math.Abs(Math.Abs(lines[lines.VertexCount - 1].Position.X) + Math.Abs(lines[lines.VertexCount - 1].Position.Y) - Math.Abs(position.X) - Math.Abs(position.Y)) > 4)
                     if (!sprite.GetGlobalBounds().Contains(lines[lines.VertexCount - 1].Position.X, lines[lines.VertexCount - 1].Position.Y))
                     {
-
                         Mouse_x.Add(position.X);
                         Mouse_y.Add(position.Y);
 
-                        lines.Append(new Vertex(new Vector2f(Mouse_x[Mouse_x.Count() - 1], Mouse_y[Mouse_x.Count() - 1]), new Color(0, 255, 0)));
+                        lines.Append(new Vertex(new Vector2f(Mouse_x[Mouse_x.Count() - 1], Mouse_y[Mouse_x.Count() - 1]), new Color(255, 0, 0)));
                     }
             }
         }
 
     }
 
-    class MyWindow
+    class GameWindow
     {
-        bool sprawdzKolizje(Airport p1, obiekt p2)
+        bool CheckCollision(AirportClass p1, AirplaneClass p2)
         {
             if (p1.rectangle.GetGlobalBounds().Intersects(p2.sprite.GetGlobalBounds()) )
             {
@@ -159,7 +158,7 @@ namespace Gra_JPWP
                         window1.Close();
                     }
                 };
-            Airport lotnisko1 = new Airport();
+            AirportClass lotnisko1 = new AirportClass();
 
             SFML.Graphics.Font font = new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf");
             Text text = new Text("Hello World!", font);
@@ -177,12 +176,18 @@ namespace Gra_JPWP
 
             bool wasMousePressed = false;
 
+            RectangleShape FlyableArea;
+
+            FlyableArea = new RectangleShape(new Vector2f(1500, 1000)){
+                Position = new Vector2f(-238, -116)
+            };
+
             Vector2i position = new Vector2i(0, 0);
-            List<obiekt> samoloty = new List<obiekt>();
-            samoloty.Add(new obiekt(samoloty.Count()));
-            samoloty.Add(new obiekt(samoloty.Count()));
-            samoloty.Add(new obiekt(samoloty.Count()));
-            samoloty.Add(new obiekt(samoloty.Count()));
+            List<AirplaneClass> samoloty = new List<AirplaneClass>();
+            samoloty.Add(new AirplaneClass(samoloty.Count()));
+            samoloty.Add(new AirplaneClass(samoloty.Count()));
+            //samoloty.Add(new obiekt(samoloty.Count()));
+            //samoloty.Add(new obiekt(samoloty.Count()));
 
             foreach (var o in samoloty)
             {
@@ -196,7 +201,7 @@ namespace Gra_JPWP
                 delta = clock.Restart().AsSeconds();
                 angle += angleSpeed * delta;
                 window.DispatchEvents();
-                window.Clear();
+                window.Clear(new Color(200,255,255));
                 text.Rotation = angle;
                 
 
@@ -205,7 +210,7 @@ namespace Gra_JPWP
                 //
                 if (Mouse.IsButtonPressed(Mouse.Button.Left) && wasMousePressed == false)
                 {
-                    selectedPlane = 99999;
+                    selectedPlane = int.MaxValue;
                     foreach (var o in samoloty)
                     {
                         if (o.sprite.GetGlobalBounds().Contains(position.X, position.Y))
@@ -218,8 +223,21 @@ namespace Gra_JPWP
                     if (selectedPlane == o.number)
                         o.GetLines(wasMousePressed, window);
                     o.MoveMath(window);
-                    if (sprawdzKolizje(lotnisko1, o))
-                        o.sprite.Position = new Vector2f(400, 300);
+                    if (!FlyableArea.GetGlobalBounds().Intersects(o.sprite.GetGlobalBounds()))
+                        o.ReverseFlight();
+                    if (CheckCollision(lotnisko1, o))
+                        o.visible = false;
+                    foreach (var o2 in samoloty)
+                    {
+                        if (o!=o2&&o2.sprite.GetGlobalBounds().Intersects(o.sprite.GetGlobalBounds()))
+                        {
+                            if(o2.visible && o.visible)
+                            {
+                                o2.visible = false;
+                                o.visible = false;
+                            }
+                        }
+                    }
                 }
 
                 if (Mouse.IsButtonPressed(Mouse.Button.Left))
@@ -227,7 +245,8 @@ namespace Gra_JPWP
                 else wasMousePressed = false;
 
                 window.Draw(lotnisko1.sprite);
-                window.Draw(lotnisko1.rectangle);
+                //window.Draw(lotnisko1.rectangle);
+                //window.Draw(FlyableArea);
                 foreach (var o in samoloty)
                 {
                     window.Draw(o.lines);
