@@ -59,5 +59,15 @@ namespace Gra_JPWP.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Wyszukuje zlokalizowany zasób typu System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap samlot_kradziony {
+            get {
+                object obj = ResourceManager.GetObject("samlot_kradziony", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }
