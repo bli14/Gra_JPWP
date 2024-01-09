@@ -21,12 +21,24 @@ namespace Gra_JPWP
     {
         static void Main(string[] args)
         {
+            int sel = 0;
             GameWindow Game = new GameWindow();
-            Game.Show();
+            while (sel != 9)
+            {
+                if (sel == 0)
+                {
+                    sel = Game.Show();
+                }
+                else if (sel == 1)
+                {
+                    sel = Game.Menu();
+                }
+
+            }
         }
     }
 
-    class AirportClass 
+    class AirportClass
     {
         public Texture texture;
         public Sprite sprite;
@@ -37,8 +49,8 @@ namespace Gra_JPWP
             sprite = new Sprite(texture);
             sprite.Origin = new Vector2f(40, 40);
             sprite.Position = new Vector2f(400, 300);
-            rectangle = new RectangleShape(new Vector2f(320, 60)){
-                Position = new Vector2f(sprite.Position.X + 100, sprite.Position.Y-20)
+            rectangle = new RectangleShape(new Vector2f(320, 60)) {
+                Position = new Vector2f(sprite.Position.X + 100, sprite.Position.Y - 20)
             };
         }
     }
@@ -60,14 +72,14 @@ namespace Gra_JPWP
         Vector2i positionOld = new Vector2i(0, 0);
         Vector2i position = new Vector2i(0, 0);
         public AirplaneClass(int num) {
-            this.number = num;
+            number = num;
             x = 1;
             texture = new Texture("samlot.png");
             sprite = new Sprite(texture);
             sprite.Origin = new Vector2f(40, 40);
-            sprite.Position = new Vector2f(100*number, 600);
+            sprite.Position = new Vector2f(100 * number, 600);
         }
-        public void Move(double x, double y) { 
+        public void Move(double x, double y) {
             sprite.Position += new Vector2f((float)x, (float)y);
         }
         public void ReverseFlight()
@@ -84,7 +96,7 @@ namespace Gra_JPWP
                 double dx = curPlanePos.X - lines[VertexCounter].Position.X;
                 double dy = curPlanePos.Y - lines[VertexCounter].Position.Y;
 
-                
+
                 curPlanePos = sprite.Position;
 
                 rotation = (Math.Atan2(dy, dx)) * 180 / Math.PI;
@@ -130,9 +142,28 @@ namespace Gra_JPWP
         }
 
     }
+    class MenuButton
+    {
+        public Sprite sprite;
+        public Text text;
+        public MenuButton(string typ, int offset, string title, int offset2)
+        {
+            sprite = new Sprite(new Texture(typ+".png"));
+            sprite.Origin = new Vector2f(sprite.GetLocalBounds().Width/2, sprite.GetLocalBounds().Height/2);
+            sprite.Position = new Vector2f(512, 500 + offset);
+
+            text = new Text(title, new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf"));
+            text.CharacterSize = 40;
+            text.Position = new Vector2f(362 + offset2, 515 + offset);
+            text.FillColor = Color.White;
+        }
+        
+    }
 
     class GameWindow
     {
+        RenderWindow window = new RenderWindow(new VideoMode(1024, 768), "SFML.NET");
+        int MenuAction = 0;
         bool CheckCollision(AirportClass p1, AirplaneClass p2)
         {
             if (p1.rectangle.GetGlobalBounds().Intersects(p2.sprite.GetGlobalBounds()) )
@@ -141,11 +172,8 @@ namespace Gra_JPWP
             }
             return false;
         }
-        public void Show()
+        void Setup()
         {
-            VideoMode mode = new VideoMode(1024, 768);
-            RenderWindow window = new RenderWindow(mode, "SFML.NET");
-
             window.SetFramerateLimit(60);
 
             window.Closed += (obj, e) => { window.Close(); };
@@ -155,10 +183,18 @@ namespace Gra_JPWP
                     Window window1 = (Window)sender;
                     if (e.Code == Keyboard.Key.Escape)
                     {
-                        window1.Close();
+                        MenuAction = 9;
+                        //window1.Close();
                     }
                 };
+        }
+        public int Show()
+        {
+            Setup();
             AirportClass lotnisko1 = new AirportClass();
+            MenuAction = 0;
+
+
 
             SFML.Graphics.Font font = new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf");
             Text text = new Text("Hello World!", font);
@@ -196,7 +232,7 @@ namespace Gra_JPWP
 
             int selectedPlane = 99999;
 
-            while (window.IsOpen)
+            while (window.IsOpen && MenuAction==0)
             {
                 delta = clock.Restart().AsSeconds();
                 angle += angleSpeed * delta;
@@ -208,6 +244,10 @@ namespace Gra_JPWP
                 position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
 
                 //
+                if(Keyboard.IsKeyPressed(Keyboard.Key.P))
+                {
+                    MenuAction = 1;
+                }
                 if (Mouse.IsButtonPressed(Mouse.Button.Left) && wasMousePressed == false)
                 {
                     selectedPlane = int.MaxValue;
@@ -255,6 +295,33 @@ namespace Gra_JPWP
                 }
 
                 //window.Draw(text);
+                window.Display();
+            }
+            return MenuAction;
+        }
+        public int Menu()
+        {
+            Setup();
+            MenuButton button1 = new MenuButton("button_wybor-poziomu", 0, "", 35);
+            MenuButton button2 = new MenuButton("button_wyjscie", 120, "", 35);
+            while (true)
+            {
+                if (Keyboard.IsKeyPressed(Keyboard.Key.L))
+                {
+                    return 0;
+                }
+                if (MenuAction == 9)
+                    return MenuAction;
+                window.DispatchEvents();
+                window.Clear(new Color(0, 160, 255));
+                
+
+
+                
+                window.Draw(button1.sprite);
+                window.Draw(button1.text);
+                window.Draw(button2.sprite);
+                window.Draw(button2.text);
                 window.Display();
             }
         }
