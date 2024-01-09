@@ -16,6 +16,8 @@ using Color = SFML.Graphics.Color;
 using System.Reflection;
 using static System.Net.Mime.MediaTypeNames;
 using Text = SFML.Graphics.Text;
+using System.Diagnostics;
+using System.Security.Permissions;
 
 namespace Gra_JPWP
 {
@@ -24,17 +26,6 @@ namespace Gra_JPWP
     {
         static void Main(string[] args)
         {
-            Console.WriteLine(Environment.CurrentDirectory);
-            Console.WriteLine(System.AppContext.BaseDirectory);
-            Console.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
-            Console.WriteLine(Directory.GetCurrentDirectory());
-            Console.WriteLine(Environment.CurrentDirectory);
-            string[] files = Directory.GetFiles(Environment.CurrentDirectory);
-
-            foreach (string file in files)
-            {
-                Console.WriteLine(file);
-            }
             int sel = 1;
             GameWindow Game = new GameWindow();
             while (sel != 9)
@@ -46,6 +37,10 @@ namespace Gra_JPWP
                 else if (sel == 1)
                 {
                     sel = Game.Menu();
+                }
+                else if (sel == 2)
+                {
+                    sel = Game.Levels();
                 }
 
             }
@@ -77,6 +72,7 @@ namespace Gra_JPWP
         public bool visible = true;
         public double x = -1, y = -1, rotation = 0;
         public int number;
+        float GameSpeed = 1;
 
         List<float> Mouse_x = new List<float>();
         List<float> Mouse_y = new List<float>();
@@ -86,18 +82,48 @@ namespace Gra_JPWP
         Vector2f curPlanePos;
         Vector2i positionOld = new Vector2i(0, 0);
         Vector2i position = new Vector2i(0, 0);
-        public AirplaneClass(int num)
+        public AirplaneClass(int num, float GmS)
         {
+            GameSpeed = GmS;
             number = num;
             x = 1;
             texture = new Texture("samlot.png");
             sprite = new Sprite(texture);
             sprite.Origin = new Vector2f(40, 40);
-            sprite.Position = new Vector2f(100 * number, 600);
+            Random rnd = new Random();
+            int a = rnd.Next(0, 100);
+            int bx = rnd.Next(0, 100), cy;
+            if (bx > 50)
+            {
+                if(a > 50)
+                    bx = 1050;
+                else bx = -50;
+                cy = rnd.Next(-50, 800);
+
+            }
+            else
+            {
+                if (a <= 50)
+                    cy = 800;
+                else cy = -50;
+                bx = rnd.Next(-50, 1050);
+            }
+            
+            sprite.Position = new Vector2f(bx, cy);
+            double dx = 512 - bx;
+            double dy = 384 - cy;
+            rotation = (Math.Atan2(dy, dx)) * 180 / Math.PI;
+            rotation += 180;
+
+            x = -1 * Math.Cos((360 - rotation) * Math.PI / 180);
+            y = 1 * Math.Sin((360 - rotation) * Math.PI / 180);
+
+            Move(x, y);
+            sprite.Rotation = (float)rotation;
         }
         public void Move(double x, double y)
         {
-            sprite.Position += new Vector2f((float)x, (float)y);
+            sprite.Position += new Vector2f((float)x * GameSpeed, (float)y * GameSpeed);
         }
         public void ReverseFlight()
         {
@@ -120,8 +146,8 @@ namespace Gra_JPWP
                 rotation = (Math.Atan2(dy, dx)) * 180 / Math.PI;
                 rotation += 180;
 
-                x = 2 * Math.Cos((360 - rotation) * Math.PI / 180);
-                y = -2 * Math.Sin((360 - rotation) * Math.PI / 180);
+                x = 1 * Math.Cos((360 - rotation) * Math.PI / 180);
+                y = -1 * Math.Sin((360 - rotation) * Math.PI / 180);
 
                 Move(x, y);
                 sprite.Rotation = (float)rotation + 180;
@@ -169,7 +195,7 @@ namespace Gra_JPWP
         {
             sprite = new Sprite(new Texture(typ));
             sprite.Origin = new Vector2f(sprite.GetLocalBounds().Width / 2, sprite.GetLocalBounds().Height / 2);
-            sprite.Position = new Vector2f(512, 380 + offset);
+            sprite.Position = new Vector2f(512 + offset2, 380 + offset);
 
             text = new Text(title, new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf"));
             text.CharacterSize = 40;
@@ -182,7 +208,10 @@ namespace Gra_JPWP
     class GameWindow
     {
         RenderWindow window = new RenderWindow(new VideoMode(1024, 768), "SFML.NET");
+        SFML.Graphics.Font font = new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf");
         int MenuAction = 1;
+        float GameSpeed = 1;
+        float LastTime = 0;
         bool CheckCollision(AirportClass p1, AirplaneClass p2)
         {
             if (p1.rectangle.GetGlobalBounds().Intersects(p2.sprite.GetGlobalBounds()))
@@ -212,10 +241,14 @@ namespace Gra_JPWP
             Setup();
             AirportClass lotnisko1 = new AirportClass();
             MenuAction = 0;
+            int PlaneAmount = 5, SpawnedPlanes = 0;
+            var PlaneStopwatch = new Stopwatch();
+            var stopwatch = new Stopwatch();
+            PlaneStopwatch.Start();
+            stopwatch.Start();
 
 
-
-            SFML.Graphics.Font font = new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf");
+            
             Text text = new Text("Hello World!", font);
             text.CharacterSize = 40;
             float textWidth = text.GetLocalBounds().Width;
@@ -233,22 +266,13 @@ namespace Gra_JPWP
 
             RectangleShape FlyableArea;
 
-            FlyableArea = new RectangleShape(new Vector2f(1500, 1000))
+            FlyableArea = new RectangleShape(new Vector2f(1500, 1100))
             {
                 Position = new Vector2f(-238, -116)
             };
 
             Vector2i position = new Vector2i(0, 0);
             List<AirplaneClass> samoloty = new List<AirplaneClass>();
-            samoloty.Add(new AirplaneClass(samoloty.Count()));
-            samoloty.Add(new AirplaneClass(samoloty.Count()));
-            //samoloty.Add(new obiekt(samoloty.Count()));
-            //samoloty.Add(new obiekt(samoloty.Count()));
-
-            foreach (var o in samoloty)
-            {
-                Console.WriteLine(o.number);
-            }
 
             int selectedPlane = 99999;
 
@@ -256,6 +280,26 @@ namespace Gra_JPWP
             {
                 delta = clock.Restart().AsSeconds();
                 angle += angleSpeed * delta;
+                if(PlaneStopwatch.ElapsedMilliseconds > 5000 / GameSpeed / GameSpeed / GameSpeed)
+                {
+                    if (PlaneAmount <= SpawnedPlanes){
+                        if(samoloty.Count == 0)
+                        {
+                            LastTime = stopwatch.ElapsedMilliseconds / 1000;
+                            stopwatch.Stop();
+                            MenuAction = 1;
+                        }
+                    }
+                    else
+                    {
+                        samoloty.Add(new AirplaneClass(SpawnedPlanes, GameSpeed));
+                        Console.WriteLine(SpawnedPlanes);
+                        PlaneStopwatch.Restart();
+                        SpawnedPlanes++;
+                    }                    
+                }
+                    
+
                 window.DispatchEvents();
                 window.Clear(new Color(200, 255, 255));
                 text.Rotation = angle;
@@ -278,7 +322,7 @@ namespace Gra_JPWP
                     }
                 }
 
-                foreach (var o in samoloty)
+                foreach (var o in samoloty.ToList())
                 {
                     if (selectedPlane == o.number)
                         o.GetLines(wasMousePressed, window);
@@ -286,16 +330,16 @@ namespace Gra_JPWP
                     if (!FlyableArea.GetGlobalBounds().Intersects(o.sprite.GetGlobalBounds()))
                         o.ReverseFlight();
                     if (CheckCollision(lotnisko1, o))
-                        o.visible = false;
-                    foreach (var o2 in samoloty)
+                        samoloty.Remove(o);
+
+                    foreach (var o2 in samoloty.ToList())
                     {
                         if (o != o2 && o2.sprite.GetGlobalBounds().Intersects(o.sprite.GetGlobalBounds()))
                         {
-                            if (o2.visible && o.visible)
-                            {
-                                o2.visible = false;
-                                o.visible = false;
-                            }
+                            samoloty.Remove(o2);
+                            samoloty.Remove(o);
+                            LastTime = -1;
+                            MenuAction = 1;
                         }
                     }
                 }
@@ -310,8 +354,7 @@ namespace Gra_JPWP
                 foreach (var o in samoloty)
                 {
                     window.Draw(o.lines);
-                    if (o.visible)
-                        window.Draw(o.sprite);
+                    window.Draw(o.sprite);
                 }
 
                 //window.Draw(text);
@@ -325,16 +368,20 @@ namespace Gra_JPWP
             Setup();
             MenuButton button1;
             MenuButton button7;
-            button1 = new MenuButton("button_wybor-poziomu.png", 0, "", 0);
-            button7 = new MenuButton("button_wyjscie.png", 120, "", 0);
+            button1 = new MenuButton("button_wybor-poziomu.png", -120, "", 0);
+            button7 = new MenuButton("button_wyjscie.png", 0, "", 0);
+
+            Text TitleText = new Text("SkyMaster: Symulacja Lotniska", font);
+            TitleText.CharacterSize = 70;
+            TitleText.Position = new Vector2f(30, window.Size.Y / 9f);
+
+            Text ScoreText = new Text("Twój czas: "+LastTime.ToString()+"s", font);
+            if(LastTime == -1) ScoreText = new Text("Porażka! Spróbuj jeszcze raz.", font);
+            ScoreText.CharacterSize = 40;
+            ScoreText.Position = new Vector2f(window.Size.X / 2f - 120, window.Size.Y / 1.5f);
 
             while (MenuAction == 1)
             {
-
-                if (Keyboard.IsKeyPressed(Keyboard.Key.L))
-                {
-                    MenuAction = 1;
-                }
                 window.DispatchEvents();
                 window.Clear(new Color(0, 160, 255));
                 Vector2i position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
@@ -353,6 +400,63 @@ namespace Gra_JPWP
                 window.Draw(button1.text);
                 window.Draw(button7.sprite);
                 window.Draw(button7.text);
+                if(LastTime!=0)
+                    window.Draw(ScoreText);
+                window.Draw(TitleText);
+                window.Display();
+            }
+            return MenuAction;
+        }
+        public int Levels()
+        {
+            Setup();
+            MenuButton button1 = new MenuButton("button(1).png", 60, "", -120);
+            MenuButton button2 = new MenuButton("button(2).png", 60, "", 0);
+            MenuButton button3 = new MenuButton("button(3).png", 60, "", 120);
+            MenuButton button7 = new MenuButton("button_menu.png", 180, "", 0);
+
+            Text TitleText = new Text("SkyMaster: Symulacja Lotniska", font);
+            TitleText.CharacterSize = 70;
+            TitleText.Position = new Vector2f(30, window.Size.Y / 9f);
+
+            while (MenuAction == 2)
+            {
+                window.DispatchEvents();
+                window.Clear(new Color(0, 160, 255));
+                Vector2i position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
+                if (Mouse.IsButtonPressed(Mouse.Button.Left))
+                {
+                    if (button1.sprite.GetGlobalBounds().Contains(position.X, position.Y))
+                    {
+                        MenuAction = 0;
+                        GameSpeed = 1;
+                    }
+                    if (button2.sprite.GetGlobalBounds().Contains(position.X, position.Y))
+                    {
+                        MenuAction = 0;
+                        GameSpeed = 1.1f;
+                    }
+                    if (button3.sprite.GetGlobalBounds().Contains(position.X, position.Y))
+                    {
+                        MenuAction = 0;
+                        GameSpeed = 1.2f;
+                    }
+                    if (button7.sprite.GetGlobalBounds().Contains(position.X, position.Y))
+                        MenuAction = 1;
+                }
+
+
+
+
+                window.Draw(button1.sprite);
+                window.Draw(button1.text);
+                window.Draw(button2.sprite);
+                window.Draw(button2.text);
+                window.Draw(button3.sprite);
+                window.Draw(button3.text);
+                window.Draw(button7.sprite);
+                window.Draw(button7.text);
+                window.Draw(TitleText);
                 window.Display();
             }
             return MenuAction;
