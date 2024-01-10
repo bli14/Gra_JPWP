@@ -31,18 +31,11 @@ namespace Gra_JPWP
             while (sel != 9)
             {
                 if (sel == 0)
-                {
-                    sel = Game.Show();
-                }
+                    sel = Game.ShowGame();
                 else if (sel == 1)
-                {
                     sel = Game.Menu();
-                }
                 else if (sel == 2)
-                {
                     sel = Game.Levels();
-                }
-
             }
         }
     }
@@ -58,9 +51,8 @@ namespace Gra_JPWP
             sprite = new Sprite(texture);
             sprite.Origin = new Vector2f(40, 40);
             sprite.Position = new Vector2f(400, 300);
-            rectangle = new RectangleShape(new Vector2f(320, 60))
-            {
-                Position = new Vector2f(sprite.Position.X + 100, sprite.Position.Y - 20)
+            rectangle = new RectangleShape(new Vector2f(250, 60)){
+                Position = new Vector2f(sprite.Position.X + 170, sprite.Position.Y - 20)
             };
         }
     }
@@ -69,28 +61,32 @@ namespace Gra_JPWP
     {
         public Texture texture;
         public Sprite sprite;
-        public bool visible = true;
-        public double x = -1, y = -1, rotation = 0;
-        public int number;
-        float GameSpeed = 1;
 
         List<float> Mouse_x = new List<float>();
         List<float> Mouse_y = new List<float>();
 
+        public bool visible = true;
+        public double x = 1, y = -1, rotation = 0;
+        public int number;
+        float GameSpeed = 1;
+        public Stopwatch deatchwatch = new Stopwatch();
+        
+
+
         public VertexArray lines = new VertexArray(PrimitiveType.Lines);
         uint VertexCounter = 0;
         Vector2f curPlanePos;
-        Vector2i positionOld = new Vector2i(0, 0);
         Vector2i position = new Vector2i(0, 0);
+
         public AirplaneClass(int num, float GmS)
         {
             GameSpeed = GmS;
             number = num;
-            x = 1;
             texture = new Texture("samlot.png");
             sprite = new Sprite(texture);
             sprite.Origin = new Vector2f(40, 40);
             Random rnd = new Random();
+
             int a = rnd.Next(0, 100);
             int bx = rnd.Next(0, 100), cy;
             if (bx > 50)
@@ -121,16 +117,19 @@ namespace Gra_JPWP
             Move(x, y);
             sprite.Rotation = (float)rotation;
         }
+
         public void Move(double x, double y)
         {
             sprite.Position += new Vector2f((float)x * GameSpeed, (float)y * GameSpeed);
         }
+
         public void ReverseFlight()
         {
             x = -x;
             y = -y;
             sprite.Rotation = (float)rotation;
         }
+
         public void MoveMath(RenderWindow window)
         {
             if ((int)lines.VertexCount > (int)VertexCounter + 1)
@@ -153,13 +152,10 @@ namespace Gra_JPWP
                 sprite.Rotation = (float)rotation + 180;
             }
             else Move(x, y);
-
-
         }
 
         public void GetLines(bool wasMousePressed, RenderWindow window)
         {
-            positionOld = position;
             position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
             if (wasMousePressed == false && Mouse.IsButtonPressed(Mouse.Button.Left))
             {
@@ -185,157 +181,137 @@ namespace Gra_JPWP
                     }
             }
         }
-
+        public void Land()
+        {
+            deatchwatch.Start();
+        }
     }
     class MenuButton
     {
         public Sprite sprite;
         public Text text;
-        public MenuButton(string typ, int offset, string title, int offset2)
+        public MenuButton(string typ, int offset, int offset2)
         {
             sprite = new Sprite(new Texture(typ));
             sprite.Origin = new Vector2f(sprite.GetLocalBounds().Width / 2, sprite.GetLocalBounds().Height / 2);
             sprite.Position = new Vector2f(512 + offset2, 380 + offset);
 
-            text = new Text(title, new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf"));
-            text.CharacterSize = 40;
-            text.Position = new Vector2f(362 + offset2, 515 + offset);
-            text.FillColor = Color.White;
         }
-
     }
 
     class GameWindow
     {
-        RenderWindow window = new RenderWindow(new VideoMode(1024, 768), "SFML.NET");
+        RenderWindow window = new RenderWindow(new VideoMode(1024, 768), "SkyMaster: Symulacja Lotniska");
         SFML.Graphics.Font font = new SFML.Graphics.Font("C:/Windows/Fonts/arial.ttf");
         int MenuAction = 1;
         float GameSpeed = 1;
         float LastTime = 0;
+
         bool CheckCollision(AirportClass p1, AirplaneClass p2)
         {
             if (p1.rectangle.GetGlobalBounds().Intersects(p2.sprite.GetGlobalBounds()))
-            {
                 return true;
-            }
             return false;
         }
+
         void Setup()
         {
             window.SetFramerateLimit(60);
 
             window.Closed += (obj, e) => { window.Close(); };
             window.KeyPressed +=
-                (sender, e) =>
-                {
+                (sender, e) =>{
                     Window window1 = (Window)sender;
                     if (e.Code == Keyboard.Key.Escape)
-                    {
                         MenuAction = 9;
-                        //window1.Close();
-                    }
                 };
         }
-        public int Show()
+
+        public int ShowGame()
         {
             Setup();
-            AirportClass lotnisko1 = new AirportClass();
             MenuAction = 0;
+
+            AirportClass lotnisko1 = new AirportClass();
             int PlaneAmount = 5, SpawnedPlanes = 0;
+            int selectedPlane = int.MaxValue;
+
             var PlaneStopwatch = new Stopwatch();
             var stopwatch = new Stopwatch();
             PlaneStopwatch.Start();
             stopwatch.Start();
 
-
-            
-            Text text = new Text("Hello World!", font);
-            text.CharacterSize = 40;
-            float textWidth = text.GetLocalBounds().Width;
-            float textHeight = text.GetLocalBounds().Height;
-            float xOffset = text.GetLocalBounds().Left;
-            float yOffset = text.GetLocalBounds().Top;
-            text.Origin = new Vector2f(textWidth / 2f + xOffset, textHeight / 2f + yOffset);
-            text.Position = new Vector2f(window.Size.X / 2f, window.Size.Y / 2f);
-            Clock clock = new Clock();
-            float delta = 0f;
-            float angle = 0f;
-            float angleSpeed = 90f;
+            Text text = new Text();
+            Text text2 = new Text();
 
             bool wasMousePressed = false;
 
-            RectangleShape FlyableArea;
 
-            FlyableArea = new RectangleShape(new Vector2f(1500, 1100))
-            {
+            RectangleShape FlyableArea;
+            List<AirplaneClass> samoloty = new List<AirplaneClass>();
+            Vector2i position = new Vector2i(0, 0);
+
+            FlyableArea = new RectangleShape(new Vector2f(1500, 1100)){
                 Position = new Vector2f(-238, -116)
             };
+            
 
-            Vector2i position = new Vector2i(0, 0);
-            List<AirplaneClass> samoloty = new List<AirplaneClass>();
-
-            int selectedPlane = 99999;
-
-            while (window.IsOpen && MenuAction == 0)
+            while (window.IsOpen && MenuAction == 0) //Główna pętla gry
             {
-                delta = clock.Restart().AsSeconds();
-                angle += angleSpeed * delta;
                 if(PlaneStopwatch.ElapsedMilliseconds > 5000 / GameSpeed / GameSpeed / GameSpeed)
                 {
                     if (PlaneAmount <= SpawnedPlanes){
-                        if(samoloty.Count == 0)
-                        {
+                        if(samoloty.Count == 0){
                             LastTime = stopwatch.ElapsedMilliseconds / 1000;
                             stopwatch.Stop();
                             MenuAction = 1;
                         }
                     }
-                    else
-                    {
+                    else{
                         samoloty.Add(new AirplaneClass(SpawnedPlanes, GameSpeed));
                         Console.WriteLine(SpawnedPlanes);
                         PlaneStopwatch.Restart();
                         SpawnedPlanes++;
                     }                    
                 }
-                    
-
+                
                 window.DispatchEvents();
                 window.Clear(new Color(200, 255, 255));
-                text.Rotation = angle;
-
-
                 position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
 
-                //
                 if (Keyboard.IsKeyPressed(Keyboard.Key.P))
-                {
                     MenuAction = 1;
-                }
-                if (Mouse.IsButtonPressed(Mouse.Button.Left) && wasMousePressed == false)
-                {
+
+                if (Mouse.IsButtonPressed(Mouse.Button.Left) && wasMousePressed == false){
                     selectedPlane = int.MaxValue;
-                    foreach (var o in samoloty)
-                    {
+                    foreach (var o in samoloty){
                         if (o.sprite.GetGlobalBounds().Contains(position.X, position.Y))
                             selectedPlane = o.number;
                     }
                 }
 
-                foreach (var o in samoloty.ToList())
-                {
+                foreach (var o in samoloty.ToList()){
                     if (selectedPlane == o.number)
                         o.GetLines(wasMousePressed, window);
+
                     o.MoveMath(window);
+
                     if (!FlyableArea.GetGlobalBounds().Intersects(o.sprite.GetGlobalBounds()))
                         o.ReverseFlight();
-                    if (CheckCollision(lotnisko1, o))
-                        samoloty.Remove(o);
 
-                    foreach (var o2 in samoloty.ToList())
+                    if (CheckCollision(lotnisko1, o))
+                        o.Land();
+
+                    if (o.deatchwatch.ElapsedMilliseconds > 0)
                     {
-                        if (o != o2 && o2.sprite.GetGlobalBounds().Intersects(o.sprite.GetGlobalBounds()))
-                        {
+                        float coeff = 1 - (o.deatchwatch.ElapsedMilliseconds / 1000f);
+                        o.sprite.Scale = new Vector2f(coeff, coeff);
+                        if(o.deatchwatch.ElapsedMilliseconds > 1000)
+                            samoloty.Remove(o);
+                    }
+
+                    foreach (var o2 in samoloty.ToList()){
+                        if (o != o2 && o2.sprite.GetGlobalBounds().Intersects(o.sprite.GetGlobalBounds())){
                             samoloty.Remove(o2);
                             samoloty.Remove(o);
                             LastTime = -1;
@@ -348,16 +324,23 @@ namespace Gra_JPWP
                     wasMousePressed = true;
                 else wasMousePressed = false;
 
+                text = new Text("Pozostała ilość samolotów: " + (PlaneAmount - SpawnedPlanes), font);
+                text2 = new Text("Czas: " + stopwatch.ElapsedMilliseconds / 1000 + "s", font);
+                text.CharacterSize = 40;
+                text2.CharacterSize = 40;
+                text.Position = new Vector2f(10, 10);
+                text2.Position = new Vector2f(820, 10);
+                text.FillColor = Color.Black;
+                text2.FillColor = Color.Black;
+
                 window.Draw(lotnisko1.sprite);
-                //window.Draw(lotnisko1.rectangle);
-                //window.Draw(FlyableArea);
-                foreach (var o in samoloty)
-                {
+                foreach (var o in samoloty){
                     window.Draw(o.lines);
                     window.Draw(o.sprite);
                 }
 
-                //window.Draw(text);
+                window.Draw(text);
+                window.Draw(text2);
                 window.Display();
             }
             return MenuAction;
@@ -367,39 +350,36 @@ namespace Gra_JPWP
 
             Setup();
             MenuButton button1;
-            MenuButton button7;
-            button1 = new MenuButton("button_wybor-poziomu.png", -120, "", 0);
-            button7 = new MenuButton("button_wyjscie.png", 0, "", 0);
+            MenuButton button2;
+            button1 = new MenuButton("button_wybor-poziomu.png", -80, 0);
+            button2 = new MenuButton("button_wyjscie.png", 40, 0);
 
             Text TitleText = new Text("SkyMaster: Symulacja Lotniska", font);
             TitleText.CharacterSize = 70;
             TitleText.Position = new Vector2f(30, window.Size.Y / 9f);
 
             Text ScoreText = new Text("Twój czas: "+LastTime.ToString()+"s", font);
-            if(LastTime == -1) ScoreText = new Text("Porażka! Spróbuj jeszcze raz.", font);
-            ScoreText.CharacterSize = 40;
             ScoreText.Position = new Vector2f(window.Size.X / 2f - 120, window.Size.Y / 1.5f);
+            if (LastTime == -1){
+                ScoreText = new Text("Porażka! Spróbuj jeszcze raz.", font);
+                ScoreText.Position = new Vector2f(window.Size.X / 2f - 240, window.Size.Y / 1.5f);
+            }
+            ScoreText.CharacterSize = 40;
 
             while (MenuAction == 1)
             {
                 window.DispatchEvents();
                 window.Clear(new Color(0, 160, 255));
                 Vector2i position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
-                if (Mouse.IsButtonPressed(Mouse.Button.Left))
-                {
+                if (Mouse.IsButtonPressed(Mouse.Button.Left)){
                     if (button1.sprite.GetGlobalBounds().Contains(position.X, position.Y))
                         MenuAction = 2;
-                    if (button7.sprite.GetGlobalBounds().Contains(position.X, position.Y))
+                    if (button2.sprite.GetGlobalBounds().Contains(position.X, position.Y))
                         MenuAction = 9;
                 }
 
-
-
-
                 window.Draw(button1.sprite);
-                window.Draw(button1.text);
-                window.Draw(button7.sprite);
-                window.Draw(button7.text);
+                window.Draw(button2.sprite);
                 if(LastTime!=0)
                     window.Draw(ScoreText);
                 window.Draw(TitleText);
@@ -410,10 +390,10 @@ namespace Gra_JPWP
         public int Levels()
         {
             Setup();
-            MenuButton button1 = new MenuButton("button(1).png", 60, "", -120);
-            MenuButton button2 = new MenuButton("button(2).png", 60, "", 0);
-            MenuButton button3 = new MenuButton("button(3).png", 60, "", 120);
-            MenuButton button7 = new MenuButton("button_menu.png", 180, "", 0);
+            MenuButton button1 = new MenuButton("button(1).png", 60, -150);
+            MenuButton button2 = new MenuButton("button(2).png", 60, 0);
+            MenuButton button3 = new MenuButton("button(3).png", 60, 150);
+            MenuButton button4 = new MenuButton("button_menu.png", 180, 0);
 
             Text TitleText = new Text("SkyMaster: Symulacja Lotniska", font);
             TitleText.CharacterSize = 70;
@@ -424,38 +404,27 @@ namespace Gra_JPWP
                 window.DispatchEvents();
                 window.Clear(new Color(0, 160, 255));
                 Vector2i position = (Vector2i)window.MapPixelToCoords(Mouse.GetPosition(window));
-                if (Mouse.IsButtonPressed(Mouse.Button.Left))
-                {
-                    if (button1.sprite.GetGlobalBounds().Contains(position.X, position.Y))
-                    {
+                if (Mouse.IsButtonPressed(Mouse.Button.Left)){
+                    if (button1.sprite.GetGlobalBounds().Contains(position.X, position.Y)){
                         MenuAction = 0;
                         GameSpeed = 1;
                     }
-                    if (button2.sprite.GetGlobalBounds().Contains(position.X, position.Y))
-                    {
+                    else if (button2.sprite.GetGlobalBounds().Contains(position.X, position.Y)){
                         MenuAction = 0;
                         GameSpeed = 1.1f;
                     }
-                    if (button3.sprite.GetGlobalBounds().Contains(position.X, position.Y))
-                    {
+                    else if (button3.sprite.GetGlobalBounds().Contains(position.X, position.Y)){
                         MenuAction = 0;
                         GameSpeed = 1.2f;
                     }
-                    if (button7.sprite.GetGlobalBounds().Contains(position.X, position.Y))
+                    else if (button4.sprite.GetGlobalBounds().Contains(position.X, position.Y))
                         MenuAction = 1;
                 }
 
-
-
-
                 window.Draw(button1.sprite);
-                window.Draw(button1.text);
                 window.Draw(button2.sprite);
-                window.Draw(button2.text);
                 window.Draw(button3.sprite);
-                window.Draw(button3.text);
-                window.Draw(button7.sprite);
-                window.Draw(button7.text);
+                window.Draw(button4.sprite);
                 window.Draw(TitleText);
                 window.Display();
             }
