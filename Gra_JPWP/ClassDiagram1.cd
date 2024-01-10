@@ -8,7 +8,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="Gra_JPWP.AirportClass">
-    <Position X="1.5" Y="4.5" Width="3" />
+    <Position X="10" Y="1.75" Width="3" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAACAAABAAAgAAAAAAAAAAAAA=</HashCode>
       <FileName>Program.cs</FileName>
@@ -17,14 +17,14 @@
   <Class Name="Gra_JPWP.AirplaneClass">
     <Position X="5.5" Y="1.75" Width="4.25" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAIAAYAAAAACAIBAAhBIAIgAACABgCAAAAAA=</HashCode>
+      <HashCode>AAAAABAAAIAAAAAAAACAABAAjBIAIgAAAwBgAABAAAA=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Gra_JPWP.GameWindow">
     <Position X="1.5" Y="3" Width="3.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAACAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAIAABAACAAAAAAAAACAAAAAAAIIAACJAAAAAACAAAA=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
